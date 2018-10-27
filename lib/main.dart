@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timer_app_proto/stopwatch.dart';
 
 void main() => runApp(new MyApp());
 
@@ -27,7 +29,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Stopwatch _stopwatch;
+  CustomStopwatch _stopwatch;
   Timer _timer;
   int _seconds = 0;
   int _minutes = 0;
@@ -35,7 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _stopwatch = Stopwatch();
+    _stopwatch = CustomStopwatch();
   }
 
   void _startTimer() {
@@ -59,6 +61,25 @@ class _MyHomePageState extends State<MyHomePage> {
       _minutes = _stopwatch.elapsed.inMinutes;
     });
   }
+
+  void _saveStartTime() async {
+    // Get time
+    final dateTime = DateTime.now();
+
+    // Save time
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt("startTime", dateTime.millisecondsSinceEpoch);
+  }
+
+  void _loadStartTime() async {
+    // Get time
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final milisecondsTime = prefs.getInt("startTime");
+
+    // Show the time state
+
+  }
+
   @override
   Widget build(BuildContext context) {
     final formatSeconds = NumberFormat("00");
