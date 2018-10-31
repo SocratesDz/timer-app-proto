@@ -1,8 +1,10 @@
 class CustomStopwatch {
   DateTime _startTime;
-  bool _isRunning;
+  bool _isRunning = false;
   DateTime _endTime;
-  bool _isStarted;
+  bool _isStarted = false;
+
+  DateTime get startTime => _startTime;
 
   Duration get elapsed => (_isRunning ? _now : _endTime).difference(_startTime);
 
@@ -11,12 +13,12 @@ class CustomStopwatch {
   DateTime get _now => DateTime.now();
 
   void start() {
-    if(!_isStarted) {
+    if (_isRunning == true) return;
+    if (!_isStarted) {
       _startTime = _now;
       _isStarted = true;
     } else {
-      final currentTime = _now;
-      _startTime = _startTime.subtract(currentTime.difference(_startTime));
+      _startTime = _now.subtract(_endTime.difference(_startTime));
     }
     _isRunning = true;
   }
@@ -30,13 +32,15 @@ class CustomStopwatch {
     _startTime = _now;
     _endTime = _now;
     _isRunning = false;
+    _isStarted = false;
   }
 
-  CustomStopwatch({int elapsedTime}) {
+  CustomStopwatch({int initialMilliseconds, bool shouldStart = false}): assert(shouldStart != null) {
     reset();
-    _isStarted = false;
-    if (elapsedTime != null) {
-      _startTime.add(Duration(milliseconds: elapsedTime));
+    if (initialMilliseconds != null) {
+      _startTime = DateTime.fromMillisecondsSinceEpoch(initialMilliseconds);
     }
+    _isStarted = shouldStart;
+    _isRunning = shouldStart;
   }
 }

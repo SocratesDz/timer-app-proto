@@ -29,7 +29,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  CustomStopwatch _stopwatch;
+  var _stopwatch = CustomStopwatch();
   Timer _timer;
   int _seconds = 0;
   int _minutes = 0;
@@ -37,21 +37,22 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _stopwatch = CustomStopwatch();
+    _loadStartTime();
   }
 
   void _startTimer() {
     setState(() {
       _stopwatch.start();
       _timer = Timer.periodic(Duration(seconds: 1), (_) => _updateTimer());
+      _saveStartTime();
     });
   }
 
   void _stopTimer() {
     setState(() {
       _stopwatch.stop();
-      _stopwatch.reset();
       _timer?.cancel();
+      _saveStartTime();
     });
   }
 
@@ -64,20 +65,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _saveStartTime() async {
     // Get time
-    final dateTime = DateTime.now();
+    final dateTime = _stopwatch.startTime;
 
     // Save time
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setInt("startTime", dateTime.millisecondsSinceEpoch);
+    prefs.setBool("isRunning", _stopwatch.isRunning);
   }
 
   void _loadStartTime() async {
     // Get time
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final milisecondsTime = prefs.getInt("startTime");
-
+    final millisecondsTime = prefs.getInt("startTime");
+    final isRunning = prefs.getBool("isRunning");
     // Show the time state
-
+    _stopwatch = CustomStopwatch(
+        initialMilliseconds: millisecondsTime, shouldStart: isRunning ?? false);
   }
 
   @override
@@ -102,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: new FloatingActionButton(
         onPressed: _stopwatch.isRunning ? _stopTimer : _startTimer,
         tooltip: 'Increment',
-        child: new Icon(_stopwatch.isRunning ? Icons.stop : Icons.play_arrow),
+        child: new Icon(_stopwatch.isRunning ? Icons.pause : Icons.play_arrow),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
