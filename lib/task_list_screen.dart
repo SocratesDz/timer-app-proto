@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:timer_app_proto/timer_event.dart';
 import 'package:timer_app_proto/timer_isolate.dart';
 
 class TaskListScreen extends StatefulWidget {
@@ -15,6 +16,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
   void initState() {
     super.initState();
     _timerIsolate = TimerIsolate();
+  }
+
+  @override
+  void dispose() {
+    _timerIsolate.dispose();
+    super.dispose();
   }
 
   @override
@@ -43,29 +50,36 @@ class _TaskListScreenState extends State<TaskListScreen> {
               child: InkWell(
                 onTap: _showTaskDetail,
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: FloatingActionButton(
-                          child: new Icon(
-                              _isRunning() ? Icons.pause : Icons.play_arrow),
-                          onPressed: _isRunning() ? _stopTimer : _startTimer,
-                        ),
-                      ),
-                      StreamBuilder<Duration>(stream: _timerIsolate.duration, builder: (context, snapshot) {
-                        if(snapshot.hasData) {
-                          return Text(
-                            _formatTimeDuration(snapshot.data),
-                            style: Theme.of(context).textTheme.display1,
+                    padding: const EdgeInsets.all(8.0),
+                    child: StreamBuilder<TimerEvent>(
+                        initialData: TimerEvent(false, Duration(seconds: 0)),
+                        stream: _timerIsolate.timerEvents,
+                        builder: (context, snapshot) {
+                          return Row(
+                            children: <Widget>[
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: FloatingActionButton(
+                                  child: new Icon(snapshot.data.isActive
+                                      ? Icons.pause
+                                      : Icons.play_arrow),
+                                  onPressed: snapshot.data.isActive
+                                      ? _stopTimer
+                                      : _startTimer,
+                                ),
+                              ),
+                              snapshot.hasData
+                                  ? Text(
+                                      _formatTimeDuration(
+                                          snapshot.data.duration),
+                                      style:
+                                          Theme.of(context).textTheme.display1,
+                                    )
+                                  : CircularProgressIndicator()
+                            ],
                           );
-                        }
-                        return CircularProgressIndicator();
-                      },)
-                    ],
-                  ),
-                ),
+                        })),
               ),
             )
           ],
@@ -108,7 +122,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     await _timerIsolate.stop();
   }
 
-  bool _isRunning() => _timerIsolate.isRunning;
+  bool _isRunning() => _timerIsolate.isRunning();
 
   String _formatTimeDuration(Duration duration) {
     final formatSeconds = NumberFormat("00");
